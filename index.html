@@ -1,788 +1,1167 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Horizonte de Eventos</title>
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,600&family=Instrument+Sans:wght@400;500&display=swap"
-    rel="stylesheet">
-  <style>
-    :root {
-      --void: #05060a;
-      --ember: #ff9a3c;
-      --plasma: #ffd9a0;
-      --cold: #8fb8ff;
-      --text: #ece8df;
-      --dim: #a7a49c;
-      --pad: clamp(20px, 6vw, 90px)
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0
-    }
-
-    html {
-      background: var(--void);
-      scrollbar-width: none;
-      -ms-overflow-style: none
-    }
-
-    html::-webkit-scrollbar {
-      display: none
-    }
-
-    body {
-      color: var(--text);
-      font-family: 'Instrument Sans', system-ui, sans-serif;
-      line-height: 1.6;
-      overflow-x: hidden
-    }
-
-    h1,
-    h2,
-    h3 {
-      font-family: 'Fraunces', Georgia, serif;
-      font-weight: 300;
-      line-height: 1.05;
-      letter-spacing: -.02em
-    }
-
-    #gl {
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-      display: block
-    }
-
-    section {
-      position: relative;
-      z-index: 1
-    }
-
-    .stick {
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      height: 100svh;
-      overflow: hidden
-    }
-
-    .hero {
-      height: 230vh
-    }
-
-    .hero-in {
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      padding: 0 var(--pad) 12vh
-    }
-
-    .hero h1 {
-      font-size: clamp(2.6rem, 8vw, 7rem);
-      max-width: 12ch
-    }
-
-    .hero p {
-      max-width: 44ch;
-      margin-top: 1.2rem;
-      color: var(--dim);
-      font-size: 1.1rem
-    }
-
-    .hint {
-      color: var(--ember) !important
-    }
-
-    .note {
-      position: absolute;
-      left: var(--pad);
-      right: var(--pad);
-      bottom: 12vh;
-      max-width: 30rem;
-      opacity: 0
-    }
-
-    .note h2 {
-      font-size: clamp(1.8rem, 4.4vw, 3.2rem)
-    }
-
-    .space {
-      height: 420vh
-    }
-
-    .horizon {
-      height: 520vh
-    }
-
-    .sing {
-      height: 340vh
-    }
-
-    .beat {
-      position: absolute;
-      left: var(--pad);
-      right: var(--pad);
-      bottom: 12vh;
-      max-width: 34rem;
-      opacity: 0;
-      pointer-events: none
-    }
-
-    .beat.top {
-      top: 9vh;
-      bottom: auto
-    }
-
-    .beat h2 {
-      font-size: clamp(1.8rem, 4.4vw, 3.2rem);
-      margin-bottom: .8rem
-    }
-
-    .beat p {
-      font-size: 1.05rem;
-      color: #d9d5cb
-    }
-
-    .beat.mid {
-      top: 50%;
-      bottom: auto;
-      transform: translateY(-50%);
-      text-align: center;
-      margin: auto;
-      max-width: 40rem;
-      mix-blend-mode: difference
-    }
-
-    .beat.mid p {
-      color: #fff
-    }
-
-    .hud {
-      position: fixed;
-      top: 18px;
-      right: 20px;
-      z-index: 5;
-      font-size: .8rem;
-      color: var(--dim);
-      text-align: right;
-      font-variant-numeric: tabular-nums;
-      mix-blend-mode: difference
-    }
-
-    .hud b {
-      color: var(--plasma);
-      font-weight: 500
-    }
-
-    #grid {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      touch-action: pan-y;
-      cursor: crosshair
-    }
-
-    #dg {
-      position: absolute;
-      right: clamp(10px, 5vw, 80px);
-      top: 10vh;
-      width: min(300px, 42vw);
-      height: 72vh
-    }
-
-    .hz-head {
-      position: absolute;
-      top: 9vh;
-      left: var(--pad);
-      right: 20px
-    }
-
-    .hz-head h2 {
-      font-size: clamp(1.8rem, 4.6vw, 3.6rem);
-      max-width: 16ch
-    }
-
-    .hz-head p {
-      color: var(--dim);
-      margin-top: .6rem;
-      max-width: 36ch
-    }
-
-    .scene {
-      position: absolute;
-      inset: 0;
-      perspective: 1500px;
-      display: flex;
-      align-items: center;
-      justify-content: center
-    }
-
-    .ring {
-      position: relative;
-      width: min(260px, 64vw);
-      height: 340px;
-      transform-style: preserve-3d;
-      margin-top: 8vh
-    }
-
-    .card {
-      position: absolute;
-      inset: 0;
-      padding: 22px;
-      background: linear-gradient(160deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, .02));
-      border: 1px solid rgba(255, 255, 255, .22);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25), 0 10px 40px rgba(0, 0, 0, .35);
-      border-radius: 14px;
-      color: var(--text);
-      text-align: left;
-      font: inherit;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      gap: .5rem;
-      -webkit-backdrop-filter: blur(14px) saturate(140%);
-      backdrop-filter: blur(14px) saturate(140%)
-    }
-
-    .card h3 {
-      font-size: 1.5rem;
-      text-shadow: 0 1px 8px rgba(0, 0, 0, .6)
-    }
-
-    .card span {
-      color: #d0ccc2;
-      font-size: .9rem
-    }
-
-    .card:focus-visible {
-      outline: 2px solid var(--plasma);
-      outline-offset: 4px
-    }
-
-    .orb {
-      position: absolute;
-      top: 22px;
-      left: 22px;
-      width: 74px;
-      height: 74px;
-      border-radius: 50%
-    }
-
-    .panel {
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 5vh;
-      text-align: center;
-      padding: 0 24px
-    }
-
-    .panel p {
-      max-width: 46ch;
-      margin: 0 auto;
-      color: #e6e1d6;
-      min-height: 4.8em;
-      text-shadow: 0 1px 10px #000
-    }
-
-    .panel small {
-      color: var(--ember)
-    }
-
-    .cta {
-      min-height: 100vh;
-      padding: 60vh var(--pad) 8vh;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center
-    }
-
-    .cta h2 {
-      font-size: clamp(2.2rem, 6vw, 5rem);
-      max-width: 14ch
-    }
-
-    .cta p {
-      max-width: 44ch;
-      margin: 1.2rem 0 2rem;
-      color: #c9c5bb
-    }
-
-    .btn {
-      display: inline-block;
-      padding: .95rem 1.8rem;
-      background: var(--ember);
-      color: #1a0d02;
-      font-weight: 500;
-      text-decoration: none;
-      border-radius: 2px
-    }
-
-    .btn:hover {
-      background: var(--plasma)
-    }
-
-    .btn:focus-visible {
-      outline: 2px solid #fff;
-      outline-offset: 4px
-    }
-
-    footer {
-      margin-top: auto;
-      padding-top: 6rem;
-      color: var(--dim);
-      font-size: .85rem;
-      max-width: 60ch
-    }
-
-    @media (max-width:700px) {
-      #dg {
-        height: 44vh;
-        top: 6vh;
-        width: 70vw
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#05060a" />
+    <title>Horizonte de Eventos</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,600&family=Instrument+Sans:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --void: #05060a;
+        --ember: #ff9a3c;
+        --plasma: #ffd9a0;
+        --cold: #8fb8ff;
+        --text: #ece8df;
+        --dim: #a7a49c;
+        --pad: clamp(20px, 6vw, 90px);
       }
 
-      .ring {
-        height: 300px
+      * {
+        box-sizing: border-box;
+        margin: 0;
+      }
+
+      html {
+        background: var(--void);
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+
+      html::-webkit-scrollbar {
+        display: none;
+      }
+
+      body {
+        color: var(--text);
+        font-family: "Instrument Sans", system-ui, sans-serif;
+        line-height: 1.6;
+        overflow-x: hidden;
+      }
+
+      h1,
+      h2,
+      h3 {
+        font-family: "Fraunces", Georgia, serif;
+        font-weight: 300;
+        line-height: 1.05;
+        letter-spacing: -0.02em;
+      }
+
+      #gl {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        height: 100lvh;
+        z-index: 0;
+        display: block;
+      }
+
+      section {
+        position: relative;
+        z-index: 1;
+      }
+
+      .stick {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        height: 100svh;
+        overflow: hidden;
+      }
+
+      .hero {
+        height: 230vh;
+      }
+
+      .hero-in {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 0 var(--pad) 12vh;
+      }
+
+      .hero h1 {
+        font-size: clamp(2.6rem, 8vw, 7rem);
+        max-width: 12ch;
+      }
+
+      .hero p {
+        max-width: 44ch;
+        margin-top: 1.2rem;
+        color: var(--dim);
+        font-size: 1.1rem;
+      }
+
+      .hint {
+        color: var(--ember) !important;
+      }
+
+      .note {
+        position: absolute;
+        left: var(--pad);
+        right: var(--pad);
+        bottom: 12vh;
+        max-width: 30rem;
+        opacity: 0;
+      }
+
+      .note h2 {
+        font-size: clamp(1.8rem, 4.4vw, 3.2rem);
+      }
+
+      .space {
+        height: 420vh;
+      }
+
+      .horizon {
+        height: 520vh;
+      }
+
+      .sing {
+        height: 340vh;
       }
 
       .beat {
-        bottom: 9vh
+        position: absolute;
+        left: var(--pad);
+        right: var(--pad);
+        bottom: 12vh;
+        max-width: 34rem;
+        opacity: 0;
+        pointer-events: none;
       }
-    }
 
-    /* progresso da jornada */
-    .rail {
-      position: fixed;
-      right: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      height: min(300px, 42vh);
-      width: 12px;
-      z-index: 5;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      align-items: center
-    }
-
-    .rt {
-      position: absolute;
-      left: 50%;
-      top: 6px;
-      bottom: 6px;
-      width: 1px;
-      margin-left: -.5px;
-      background: rgba(236, 232, 223, .2)
-    }
-
-    .rt i {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 0;
-      background: var(--ember)
-    }
-
-    .rd {
-      position: relative;
-      width: 12px;
-      height: 12px;
-      padding: 0;
-      border-radius: 50%;
-      border: 1px solid rgba(236, 232, 223, .5);
-      background: var(--void);
-      cursor: pointer;
-      transition: background .3s, border-color .3s, box-shadow .3s
-    }
-
-    .rd.past {
-      background: rgba(255, 154, 60, .55);
-      border-color: var(--ember)
-    }
-
-    .rd.on {
-      background: var(--ember);
-      border-color: var(--plasma);
-      box-shadow: 0 0 0 4px rgba(255, 154, 60, .25)
-    }
-
-    .rd span {
-      position: absolute;
-      right: 24px;
-      top: 50%;
-      transform: translateY(-50%);
-      white-space: nowrap;
-      font-size: .72rem;
-      letter-spacing: .04em;
-      color: var(--text);
-      text-shadow: 0 0 8px #000, 0 0 3px #000;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .3s
-    }
-
-    .rd.on span,
-    .rd:hover span,
-    .rd:focus-visible span {
-      opacity: 1
-    }
-
-    .rd:focus-visible,
-    .seg button:focus-visible,
-    .sbbar button:focus-visible {
-      outline: 2px solid var(--plasma);
-      outline-offset: 3px
-    }
-
-    /* seletor de tipo */
-    .bhsel {
-      position: fixed;
-      top: 14px;
-      left: 18px;
-      z-index: 5;
-      font-size: .75rem
-    }
-
-    .seg {
-      position: relative;
-      display: inline-grid;
-      grid-template-columns: 1fr 1fr;
-      padding: 3px;
-      border-radius: 999px;
-      background: rgba(5, 6, 10, .5);
-      border: 1px solid rgba(236, 232, 223, .18);
-      backdrop-filter: blur(6px)
-    }
-
-    .seg button {
-      position: relative;
-      z-index: 1;
-      font: inherit;
-      color: var(--dim);
-      background: none;
-      border: 0;
-      padding: .35rem .85rem;
-      border-radius: 999px;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: color .35s
-    }
-
-    .seg button[aria-pressed="true"] {
-      color: var(--text)
-    }
-
-    .seg .thumb {
-      position: absolute;
-      z-index: 0;
-      top: 3px;
-      bottom: 3px;
-      left: 3px;
-      width: calc(50% - 3px);
-      border-radius: 999px;
-      background: rgba(255, 154, 60, .28);
-      box-shadow: inset 0 0 0 1px rgba(255, 154, 60, .55);
-      transform: translateX(100%);
-      transition: transform .5s cubic-bezier(.34, 1.35, .5, 1), background .5s, box-shadow .5s
-    }
-
-    .bhsel[data-k="1"] .seg .thumb {
-      transform: translateX(0);
-      background: rgba(143, 184, 255, .3);
-      box-shadow: inset 0 0 0 1px rgba(143, 184, 255, .65)
-    }
-
-    #bhcap {
-      margin-top: .45rem;
-      color: var(--dim);
-      text-shadow: 0 0 8px #000;
-      max-width: 30ch;
-      line-height: 1.35
-    }
-
-    /* modo câmera livre */
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: .8rem 1rem;
-      justify-content: center
-    }
-
-    .btn.ghost {
-      background: transparent;
-      color: var(--text);
-      border: 1px solid rgba(236, 232, 223, .35);
-      cursor: pointer;
-      font: inherit;
-      font-weight: 500
-    }
-
-    .sbbar {
-      position: fixed;
-      left: 50%;
-      bottom: 22px;
-      transform: translateX(-50%);
-      z-index: 6;
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: .6rem 1rem;
-      width: max-content;
-      max-width: calc(100vw - 32px);
-      padding: .6rem .9rem;
-      border-radius: 14px;
-      background: rgba(5, 6, 10, .55);
-      border: 1px solid rgba(236, 232, 223, .18);
-      backdrop-filter: blur(8px);
-      font-size: .8rem;
-      color: var(--dim);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .5s
-    }
-
-    .sbbar button {
-      font: inherit;
-      color: var(--text);
-      background: none;
-      border: 1px solid rgba(236, 232, 223, .3);
-      border-radius: 999px;
-      padding: .35rem .9rem;
-      cursor: pointer
-    }
-
-    .sbbar button:hover {
-      border-color: var(--ember)
-    }
-
-    body.sandbox .sbbar {
-      opacity: 1;
-      pointer-events: auto
-    }
-
-    body.sandbox section,
-    body.sandbox .hud,
-    body.sandbox .rail {
-      opacity: 0 !important;
-      pointer-events: none;
-      transition: opacity .6s
-    }
-
-    body.sandbox #gl {
-      cursor: grab;
-      touch-action: none
-    }
-
-    body.sandbox.drag #gl {
-      cursor: grabbing
-    }
-
-    .actions .btn {
-      position: relative;
-      overflow: hidden;
-      isolation: isolate;
-      transition: color .4s .08s, border-color .4s
-    }
-
-    .actions .btn::before {
-      content: "";
-      position: absolute;
-      z-index: -1;
-      left: var(--x, 50%);
-      top: var(--y, 50%);
-      width: var(--d, 300px);
-      height: var(--d, 300px);
-      border-radius: 50%;
-      background: var(--fill);
-      transform: translate(-50%, -50%) scale(0);
-      transition: transform .75s cubic-bezier(.22, .9, .28, 1)
-    }
-
-    .actions .btn:hover::before,
-    .actions .btn:focus-visible::before {
-      transform: translate(-50%, -50%) scale(1)
-    }
-
-    .actions a.btn {
-      --fill: var(--plasma)
-    }
-
-    .actions a.btn:hover {
-      background: var(--ember)
-    }
-
-    .actions .btn.ghost {
-      --fill: var(--ember)
-    }
-
-    .actions .btn.ghost:hover,
-    .actions .btn.ghost:focus-visible {
-      color: #1a0d02;
-      border-color: var(--ember)
-    }
-
-    @media (prefers-reduced-motion:reduce) {
-
-      .actions .btn::before,
-      .seg .thumb {
-        transition-duration: .01s
+      .beat.top {
+        top: 9vh;
+        bottom: auto;
       }
-    }
 
-    @media (max-width:700px) {
+      .beat h2 {
+        font-size: clamp(1.8rem, 4.4vw, 3.2rem);
+        margin-bottom: 0.8rem;
+      }
+
+      .beat p {
+        font-size: 1.05rem;
+        color: #d9d5cb;
+      }
+
+      .beat.mid {
+        top: 50%;
+        bottom: auto;
+        transform: translateY(-50%);
+        text-align: center;
+        margin: auto;
+        max-width: 40rem;
+        mix-blend-mode: difference;
+      }
+
+      .beat.mid p {
+        color: #fff;
+      }
+
+      .hud {
+        position: fixed;
+        top: 18px;
+        right: 20px;
+        z-index: 5;
+        font-size: 0.8rem;
+        color: var(--dim);
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+        mix-blend-mode: difference;
+      }
+
+      .hud b {
+        color: var(--plasma);
+        font-weight: 500;
+      }
+
+      #grid {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        touch-action: pan-y;
+        cursor: crosshair;
+      }
+
+      #dg {
+        position: absolute;
+        right: clamp(10px, 5vw, 80px);
+        top: 10vh;
+        width: min(300px, 42vw);
+        height: 72vh;
+      }
+
+      .hz-head {
+        position: absolute;
+        top: 9vh;
+        left: var(--pad);
+        right: 20px;
+      }
+
+      .hz-head h2 {
+        font-size: clamp(1.8rem, 4.6vw, 3.6rem);
+        max-width: 16ch;
+      }
+
+      .hz-head p {
+        color: var(--dim);
+        margin-top: 0.6rem;
+        max-width: 36ch;
+      }
+
+      .scene {
+        position: absolute;
+        inset: 0;
+        perspective: 1500px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .ring {
+        position: relative;
+        width: min(260px, 64vw);
+        height: 340px;
+        transform-style: preserve-3d;
+        margin-top: 8vh;
+      }
+
+      .card {
+        position: absolute;
+        inset: 0;
+        padding: 22px;
+        background: linear-gradient(
+          160deg,
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.02)
+        );
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.25),
+          0 10px 40px rgba(0, 0, 0, 0.35);
+        border-radius: 14px;
+        color: var(--text);
+        text-align: left;
+        font: inherit;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        -webkit-backdrop-filter: blur(14px) saturate(140%);
+        backdrop-filter: blur(14px) saturate(140%);
+      }
+
+      .card h3 {
+        font-size: 1.5rem;
+        text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
+      }
+
+      .card span {
+        color: #d0ccc2;
+        font-size: 0.9rem;
+      }
+
+      .card:focus-visible {
+        outline: 2px solid var(--plasma);
+        outline-offset: 4px;
+      }
+
+      .orb {
+        position: absolute;
+        top: 22px;
+        left: 22px;
+        width: 74px;
+        height: 74px;
+        border-radius: 50%;
+      }
+
+      .panel {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 5vh;
+        text-align: center;
+        padding: 0 24px;
+      }
+
+      .panel p {
+        max-width: 46ch;
+        margin: 0 auto;
+        color: #e6e1d6;
+        min-height: 4.8em;
+        text-shadow: 0 1px 10px #000;
+      }
+
+      .panel small {
+        color: var(--ember);
+      }
+
+      .cta {
+        min-height: 100vh;
+        padding: 60vh var(--pad) 8vh;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .cta h2 {
+        font-size: clamp(2.2rem, 6vw, 5rem);
+        max-width: 14ch;
+      }
+
+      .cta p {
+        max-width: 44ch;
+        margin: 1.2rem 0 2rem;
+        color: #c9c5bb;
+      }
+
+      .btn {
+        display: inline-block;
+        padding: 0.95rem 1.8rem;
+        background: var(--ember);
+        color: #1a0d02;
+        font-weight: 500;
+        text-decoration: none;
+        border-radius: 2px;
+      }
+
+      .btn:hover {
+        background: var(--plasma);
+      }
+
+      .btn:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 4px;
+      }
+
+      footer {
+        margin-top: auto;
+        padding-top: 6rem;
+        color: var(--dim);
+        font-size: 0.85rem;
+        max-width: 60ch;
+      }
+
+      /* progresso da jornada */
+      .rail {
+        position: fixed;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        height: min(300px, 42vh);
+        width: 12px;
+        z-index: 5;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .rt {
+        position: absolute;
+        left: 50%;
+        top: 6px;
+        bottom: 6px;
+        width: 1px;
+        margin-left: -0.5px;
+        background: rgba(236, 232, 223, 0.2);
+      }
+
+      .rt i {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 0;
+        background: var(--ember);
+      }
+
+      .rd {
+        position: relative;
+        width: 12px;
+        height: 12px;
+        padding: 0;
+        border-radius: 50%;
+        border: 1px solid rgba(236, 232, 223, 0.5);
+        background: var(--void);
+        cursor: pointer;
+        transition:
+          background 0.3s,
+          border-color 0.3s,
+          box-shadow 0.3s;
+      }
+
+      .rd.past {
+        background: rgba(255, 154, 60, 0.55);
+        border-color: var(--ember);
+      }
+
+      .rd.on {
+        background: var(--ember);
+        border-color: var(--plasma);
+        box-shadow: 0 0 0 4px rgba(255, 154, 60, 0.25);
+      }
+
+      .rd span {
+        position: absolute;
+        right: 24px;
+        top: 50%;
+        transform: translateY(-50%);
+        white-space: nowrap;
+        font-size: 0.72rem;
+        letter-spacing: 0.04em;
+        color: var(--text);
+        text-shadow:
+          0 0 8px #000,
+          0 0 3px #000;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+      }
+
+      .rd.on span,
+      .rd:hover span,
+      .rd:focus-visible span {
+        opacity: 1;
+      }
+
+      .rd:focus-visible,
+      .seg button:focus-visible,
+      .sbbar button:focus-visible {
+        outline: 2px solid var(--plasma);
+        outline-offset: 3px;
+      }
+
+      /* seletor de tipo */
       .bhsel {
-        left: 12px;
-        top: 10px
+        position: fixed;
+        top: 14px;
+        left: 18px;
+        z-index: 5;
+        font-size: 0.75rem;
+      }
+
+      .seg {
+        position: relative;
+        display: inline-grid;
+        grid-template-columns: 1fr 1fr;
+        padding: 3px;
+        border-radius: 999px;
+        background: rgba(5, 6, 10, 0.5);
+        border: 1px solid rgba(236, 232, 223, 0.18);
+        -webkit-backdrop-filter: blur(6px);
+        backdrop-filter: blur(6px);
+      }
+
+      .seg button {
+        position: relative;
+        z-index: 1;
+        font: inherit;
+        color: var(--dim);
+        background: none;
+        border: 0;
+        padding: 0.35rem 0.85rem;
+        border-radius: 999px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: color 0.35s;
+      }
+
+      .seg button[aria-pressed="true"] {
+        color: var(--text);
+      }
+
+      .seg .thumb {
+        position: absolute;
+        z-index: 0;
+        top: 3px;
+        bottom: 3px;
+        left: 3px;
+        width: calc(50% - 3px);
+        border-radius: 999px;
+        background: rgba(255, 154, 60, 0.28);
+        box-shadow: inset 0 0 0 1px rgba(255, 154, 60, 0.55);
+        transform: translateX(100%);
+        transition:
+          transform 0.5s cubic-bezier(0.34, 1.35, 0.5, 1),
+          background 0.5s,
+          box-shadow 0.5s;
+      }
+
+      .bhsel[data-k="1"] .seg .thumb {
+        transform: translateX(0);
+        background: rgba(143, 184, 255, 0.3);
+        box-shadow: inset 0 0 0 1px rgba(143, 184, 255, 0.65);
       }
 
       #bhcap {
-        display: none
+        margin-top: 0.45rem;
+        color: var(--dim);
+        text-shadow: 0 0 8px #000;
+        max-width: 30ch;
+        line-height: 1.35;
       }
 
-      .rail {
-        right: 8px
+      /* modo câmera livre */
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.8rem 1rem;
+        justify-content: center;
       }
-    }
-  </style>
-</head>
 
-<body>
-  <canvas id="gl" aria-hidden="true"></canvas>
-  <div class="hud" aria-hidden="true">distância ao horizonte<br><b id="dist">—</b> raios de Schwarzschild</div>
+      .btn.ghost {
+        background: transparent;
+        color: var(--text);
+        border: 1px solid rgba(236, 232, 223, 0.35);
+        cursor: pointer;
+        font: inherit;
+        font-weight: 500;
+      }
 
-  <nav class="rail" id="rail" aria-label="Progresso da jornada">
-    <div class="rt"><i id="rf"></i></div>
-  </nav>
+      .sbbar {
+        position: fixed;
+        left: 50%;
+        bottom: 22px;
+        transform: translateX(-50%);
+        z-index: 6;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.6rem 1rem;
+        width: max-content;
+        max-width: calc(100vw - 32px);
+        padding: 0.6rem 0.9rem;
+        border-radius: 14px;
+        background: rgba(5, 6, 10, 0.55);
+        border: 1px solid rgba(236, 232, 223, 0.18);
+        -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: blur(8px);
+        font-size: 0.8rem;
+        color: var(--dim);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.5s;
+      }
 
-  <div class="bhsel" id="bhsel" data-k="0">
-    <div class="seg" role="group" aria-label="Tipo de buraco negro">
-      <i class="thumb" aria-hidden="true"></i>
-      <button type="button" data-bh="1" aria-pressed="false">Massa estelar</button>
-      <button type="button" data-bh="0" aria-pressed="true">Supermassivo</button>
+      .sbbar button {
+        font: inherit;
+        color: var(--text);
+        background: none;
+        border: 1px solid rgba(236, 232, 223, 0.3);
+        border-radius: 999px;
+        padding: 0.35rem 0.9rem;
+        cursor: pointer;
+      }
+
+      .sbbar button:hover {
+        border-color: var(--ember);
+      }
+
+      body.sandbox .sbbar {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      body.sandbox section,
+      body.sandbox .hud,
+      body.sandbox .rail {
+        opacity: 0 !important;
+        pointer-events: none;
+        transition: opacity 0.6s;
+      }
+
+      body.sandbox #gl {
+        cursor: grab;
+        touch-action: none;
+      }
+
+      body.sandbox.drag #gl {
+        cursor: grabbing;
+      }
+
+      .actions .btn {
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+        transition:
+          color 0.4s 0.08s,
+          border-color 0.4s;
+      }
+
+      .actions .btn::before {
+        content: "";
+        position: absolute;
+        z-index: -1;
+        left: var(--x, 50%);
+        top: var(--y, 50%);
+        width: var(--d, 300px);
+        height: var(--d, 300px);
+        border-radius: 50%;
+        background: var(--fill);
+        transform: translate(-50%, -50%) scale(0);
+        transition: transform 0.75s cubic-bezier(0.22, 0.9, 0.28, 1);
+      }
+
+      .actions .btn:hover::before,
+      .actions .btn:focus-visible::before {
+        transform: translate(-50%, -50%) scale(1);
+      }
+
+      .actions a.btn {
+        --fill: var(--plasma);
+      }
+
+      .actions a.btn:hover {
+        background: var(--ember);
+      }
+
+      .actions .btn.ghost {
+        --fill: var(--ember);
+      }
+
+      .actions .btn.ghost:hover,
+      .actions .btn.ghost:focus-visible {
+        color: #1a0d02;
+        border-color: var(--ember);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .actions .btn::before,
+        .seg .thumb {
+          transition-duration: 0.01s;
+        }
+      }
+
+      /* =========================================================
+       RESPONSIVO / MOBILE
+       (fica no fim do CSS de propósito: precisa vencer a cascata)
+       ========================================================= */
+
+      /* toque: sem flash cinza, sem atraso de duplo toque */
+      button,
+      .btn,
+      .rd {
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+      }
+
+      /* área de toque maior nos pontinhos do trilho (visual continua 12px) */
+      .rd::before {
+        content: "";
+        position: absolute;
+        inset: -6px -12px;
+      }
+
+      .card {
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+      }
+
+      /* telas de toque: cartões 3D sem backdrop-filter.
+       O fundo atrás deles já está quase preto (WebGL a 10%), então o visual
+       quase não muda, mas o blur em elementos 3D animados pesa e bugga no Safari. */
+      @media (pointer: coarse) {
+        .card {
+          -webkit-backdrop-filter: none;
+          backdrop-filter: none;
+          background:
+            linear-gradient(
+              160deg,
+              rgba(255, 255, 255, 0.12),
+              rgba(255, 255, 255, 0.03)
+            ),
+            rgba(8, 9, 14, 0.72);
+        }
+      }
+
+      /* sem mouse: o hover "gruda" depois do toque, então desligamos o efeito líquido */
+      @media (hover: none) {
+        .actions .btn:hover::before {
+          transform: translate(-50%, -50%) scale(0);
+        }
+
+        .actions a.btn:hover {
+          background: var(--ember);
+        }
+
+        .actions .btn.ghost:hover {
+          color: var(--text);
+          border-color: rgba(236, 232, 223, 0.35);
+          background: transparent;
+        }
+
+        .btn:active {
+          transform: scale(0.97);
+        }
+      }
+
+      /* ---------- celular em pé / janelas estreitas ---------- */
+      @media (max-width: 700px) {
+        /* topo: seletor à esquerda; HUD desce para baixo dele (antes os dois se sobrepunham) */
+        .bhsel {
+          left: 12px;
+          top: 10px;
+          font-size: 0.78rem;
+        }
+
+        .seg button {
+          padding: 0.55rem 0.85rem;
+        }
+
+        #bhcap {
+          display: none;
+        }
+
+        .hud {
+          top: 54px;
+          left: 12px;
+          right: auto;
+          text-align: left;
+          font-size: 0.68rem;
+          line-height: 1.35;
+        }
+
+        /* trilho: sem rótulo fixo no ponto atual (cobria o texto) */
+        .rail {
+          right: 8px;
+        }
+
+        .rd.on span,
+        .rd:hover span {
+          opacity: 0;
+        }
+
+        .rd:focus-visible span {
+          opacity: 1;
+        }
+
+        /* textos */
+        .hero h1 {
+          font-size: clamp(2.2rem, 10.5vw, 3.6rem);
+        }
+
+        .hero p,
+        .beat p {
+          font-size: 1rem;
+        }
+
+        .note p,
+        .beat p {
+          text-shadow: 0 1px 12px rgba(0, 0, 0, 0.75);
+        }
+
+        .beat {
+          bottom: 9vh;
+        }
+
+        /* blocos ancorados no topo precisam respeitar seletor + HUD */
+        .beat.top,
+        .hz-head {
+          top: 6.4rem;
+        }
+
+        /* diagrama de espaguetificação */
+        #dg {
+          top: 6.4rem;
+          width: 68vw;
+          height: 40vh;
+        }
+
+        /* carrossel: altura do cilindro acompanha a tela */
+        .ring {
+          height: 300px;
+          height: clamp(200px, calc(100svh - 430px), 320px);
+          margin-top: 6vh;
+        }
+
+        .card {
+          padding: 18px;
+        }
+
+        .card h3 {
+          font-size: 1.35rem;
+        }
+
+        .orb {
+          top: 18px;
+          left: 18px;
+          width: 64px;
+          height: 64px;
+        }
+
+        .panel {
+          bottom: 4vh;
+          padding: 0 20px;
+        }
+
+        .panel p {
+          font-size: 0.95rem;
+          min-height: 7em;
+        }
+
+        /* CTA: botões grandes e empilhados */
+        .actions {
+          width: 100%;
+        }
+
+        .actions .btn {
+          width: 100%;
+          max-width: 22rem;
+          text-align: center;
+        }
+
+        /* barra do modo câmera livre */
+        .sbbar {
+          bottom: 14px;
+          bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+          max-width: calc(100vw - 24px);
+          font-size: 0.78rem;
+          padding: 0.55rem 0.8rem;
+        }
+
+        .sbbar button {
+          padding: 0.5rem 1rem;
+        }
+      }
+
+      /* celular em pé, tela baixa (iPhone SE etc.) */
+      @media (max-width: 700px) and (max-height: 700px) {
+        .hz-head p {
+          display: none;
+        }
+
+        .orb {
+          width: 52px;
+          height: 52px;
+        }
+
+        .card h3 {
+          font-size: 1.2rem;
+        }
+      }
+
+      /* celular deitado */
+      @media (max-height: 520px) and (orientation: landscape) {
+        #bhcap {
+          display: none;
+        }
+
+        .bhsel {
+          top: 8px;
+          left: 12px;
+          font-size: 0.72rem;
+        }
+
+        .hud {
+          top: 10px;
+          left: auto;
+          right: 56px;
+          text-align: right;
+          font-size: 0.7rem;
+        }
+
+        .hero h1 {
+          font-size: clamp(1.8rem, 5.6vw, 2.8rem);
+          max-width: 20ch;
+        }
+
+        .hero p {
+          font-size: 0.92rem;
+          margin-top: 0.5rem;
+          max-width: 52ch;
+        }
+
+        .hero-in {
+          padding-bottom: 6vh;
+        }
+
+        .note,
+        .beat {
+          bottom: 6vh;
+        }
+
+        .beat {
+          max-width: min(34rem, 54vw);
+        }
+
+        .beat.top,
+        .hz-head {
+          top: 3.6rem;
+        }
+
+        .note h2,
+        .beat h2,
+        .hz-head h2 {
+          font-size: clamp(1.3rem, 3.6vw, 1.9rem);
+          margin-bottom: 0.4rem;
+        }
+
+        .note p,
+        .beat p {
+          font-size: 0.9rem;
+          line-height: 1.45;
+        }
+
+        .hz-head p {
+          display: none;
+        }
+
+        .ring {
+          width: min(190px, 30vw);
+          height: clamp(130px, 52svh, 210px);
+          margin-top: 0;
+        }
+
+        .card {
+          padding: 12px;
+        }
+
+        .card h3 {
+          font-size: 1.05rem;
+        }
+
+        .card span {
+          font-size: 0.78rem;
+        }
+
+        .orb {
+          width: 40px;
+          height: 40px;
+          top: 12px;
+          left: 12px;
+        }
+
+        .panel {
+          bottom: 3vh;
+        }
+
+        .panel p {
+          max-width: 70ch;
+          min-height: 3.2em;
+          font-size: 0.88rem;
+        }
+
+        #dg {
+          top: 3.6rem;
+          right: 6vw;
+          width: min(220px, 30vw);
+          height: 66vh;
+        }
+
+        .cta {
+          padding-top: 40vh;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <canvas id="gl" aria-hidden="true"></canvas>
+    <div class="hud" aria-hidden="true">
+      distância ao horizonte<br /><b id="dist">—</b> raios de Schwarzschild
     </div>
-    <div id="bhcap" aria-live="polite">Supermassivo · milhões a bilhões de M☉ · disco alaranjado</div>
-  </div>
 
-  <div class="sbbar" role="toolbar" aria-label="Controles da câmera livre">
-    <span>Arraste para orbitar · role ou pince para aproximar</span>
-    <button type="button" id="sbReset">Redefinir</button>
-    <button type="button" id="sbExit">Voltar à jornada</button>
-  </div>
+    <nav class="rail" id="rail" aria-label="Progresso da jornada">
+      <div class="rt"><i id="rf"></i></div>
+    </nav>
 
-  <section class="hero" id="hero">
-    <div class="stick hero-in" id="heroIn">
-      <div id="h1w">
-        <h1>Onde a luz deixa de voltar</h1>
-        <p>Uma viagem guiada pelo scroll, do espaço aberto até a borda de um buraco negro e além dela.</p>
-        <p class="hint">Role para ligar a gravidade</p>
+    <div class="bhsel" id="bhsel" data-k="0">
+      <div class="seg" role="group" aria-label="Tipo de buraco negro">
+        <i class="thumb" aria-hidden="true"></i>
+        <button type="button" data-bh="1" aria-pressed="false">
+          Massa estelar
+        </button>
+        <button type="button" data-bh="0" aria-pressed="true">
+          Supermassivo
+        </button>
       </div>
-      <div class="note" id="note">
-        <h2>A gravidade acabou de ligar</h2>
-        <p>A luz das estrelas começa a se curvar ao redor do centro, e o gás em órbita se acende de dentro para fora.
-        </p>
+      <div id="bhcap" aria-live="polite">
+        Supermassivo · milhões a bilhões de M☉ · disco alaranjado
       </div>
     </div>
-  </section>
 
-  <section class="space" id="space">
-    <div class="stick">
-      <canvas id="grid"
-        aria-label="Grade do espaço-tempo deformada por um buraco negro. Passe o mouse ou toque para lançar fótons."></canvas>
-      <div class="beat top">
-        <h2>O espaço-tempo tem forma</h2>
-        <p>Massa curva o espaço-tempo. Longe de qualquer objeto, esta grade seria plana, e a luz seguiria em linha reta.
-        </p>
-      </div>
-      <div class="beat top">
-        <h2>Um poço sem fundo</h2>
-        <p>Um buraco negro afunda tanto a grade que ela vira um funil. Quanto mais perto do centro, mais inclinado é o
-          caminho de tudo que passa.</p>
-      </div>
-      <div class="beat top">
-        <h2>Lance um fóton</h2>
-        <p>Passe o mouse ou toque no funil. A esfera de fótons fica em 1,5 Rs, mas a luz que chega com parâmetro de
-          impacto abaixo de cerca de 2,6 Rs é engolida.</p>
-      </div>
+    <div class="sbbar" role="toolbar" aria-label="Controles da câmera livre">
+      <span>Arraste para orbitar · role ou pince para aproximar</span>
+      <button type="button" id="sbReset">Redefinir</button>
+      <button type="button" id="sbExit">Voltar à jornada</button>
     </div>
-  </section>
 
-  <section class="horizon" id="horizon">
-    <div class="stick">
-      <div class="hz-head">
-        <h2>Seis fenômenos na borda</h2>
-        <p>Role ou toque em um cartão para girar o cilindro.</p>
+    <section class="hero" id="hero">
+      <div class="stick hero-in" id="heroIn">
+        <div id="h1w">
+          <h1>Onde a luz deixa de voltar</h1>
+          <p>
+            Uma viagem guiada pelo scroll, do espaço aberto até a borda de um
+            buraco negro e além dela.
+          </p>
+          <p class="hint">Role para ligar a gravidade</p>
+        </div>
+        <div class="note" id="note">
+          <h2>A gravidade acabou de ligar</h2>
+          <p>
+            A luz das estrelas começa a se curvar ao redor do centro, e o gás em
+            órbita se acende de dentro para fora.
+          </p>
+        </div>
       </div>
-      <div class="scene">
-        <div class="ring" id="ring"></div>
-      </div>
-      <div class="panel"><small id="pn">1 de 6</small>
-        <p id="pd"></p>
-      </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="sing" id="sing">
-    <div class="stick">
-      <canvas id="dg" aria-label="Diagrama de um corpo sendo esticado ao cair em direção ao buraco negro"></canvas>
-      <div class="beat">
-        <h2>Espaguetificação</h2>
-        <p>A gravidade puxa mais forte quem está mais perto. Ao cair de pés, o corpo é esticado na vertical e comprimido
-          nas laterais.</p>
+    <section class="space" id="space">
+      <div class="stick">
+        <canvas
+          id="grid"
+          aria-label="Grade do espaço-tempo deformada por um buraco negro. Passe o mouse ou toque para lançar fótons."
+        ></canvas>
+        <div class="beat top">
+          <h2>O espaço-tempo tem forma</h2>
+          <p>
+            Massa curva o espaço-tempo. Longe de qualquer objeto, esta grade
+            seria plana, e a luz seguiria em linha reta.
+          </p>
+        </div>
+        <div class="beat top">
+          <h2>Um poço sem fundo</h2>
+          <p>
+            Um buraco negro afunda tanto a grade que ela vira um funil. Quanto
+            mais perto do centro, mais inclinado é o caminho de tudo que passa.
+          </p>
+        </div>
+        <div class="beat top">
+          <h2>Lance um fóton</h2>
+          <p>
+            Passe o mouse ou toque no funil. A esfera de fótons fica em 1,5 Rs,
+            mas a luz que chega com parâmetro de impacto abaixo de cerca de 2,6
+            Rs é engolida.
+          </p>
+        </div>
       </div>
-      <div class="beat mid">
-        <h2>Cruzando o horizonte</h2>
-        <p>Para quem cai, nada marca a fronteira. No centro, a relatividade geral prevê densidade infinita, e é ali que
-          nossas equações deixam de funcionar.</p>
+    </section>
+
+    <section class="horizon" id="horizon">
+      <div class="stick">
+        <div class="hz-head">
+          <h2>Seis fenômenos na borda</h2>
+          <p>Role ou toque em um cartão para girar o cilindro.</p>
+        </div>
+        <div class="scene">
+          <div class="ring" id="ring"></div>
+        </div>
+        <div class="panel">
+          <small id="pn">1 de 6</small>
+          <p id="pd"></p>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="cta" id="cta">
-    <h2>De volta ao espaço profundo</h2>
-    <p>Imagens reais, missões e descobertas recentes sobre buracos negros estão a um clique.</p>
-    <div class="actions">
-      <a class="btn" href="https://science.nasa.gov/universe/black-holes/" target="_blank" rel="noopener">Explorar
-        buracos
-        negros na NASA</a>
-      <button type="button" class="btn ghost" id="sbOpen" aria-expanded="false">Liberar câmera 3D</button>
-    </div>
-    <footer>Visualização artística feita com shaders em Three.js, inspirada em projetos como MisterPrada/singularity. As
-      distâncias mostradas são ilustrativas.</footer>
-  </section>
+    <section class="sing" id="sing">
+      <div class="stick">
+        <canvas
+          id="dg"
+          aria-label="Diagrama de um corpo sendo esticado ao cair em direção ao buraco negro"
+        ></canvas>
+        <div class="beat">
+          <h2>Espaguetificação</h2>
+          <p>
+            A gravidade puxa mais forte quem está mais perto. Ao cair de pés, o
+            corpo é esticado na vertical e comprimido nas laterais.
+          </p>
+        </div>
+        <div class="beat mid">
+          <h2>Cruzando o horizonte</h2>
+          <p>
+            Para quem cai, nada marca a fronteira. No centro, a relatividade
+            geral prevê densidade infinita, e é ali que nossas equações deixam
+            de funcionar.
+          </p>
+        </div>
+      </div>
+    </section>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script>
-    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const $ = s => document.querySelector(s);
-    const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
-    const sstep = (a, b, x) => { const t = clamp((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+    <section class="cta" id="cta">
+      <h2>De volta ao espaço profundo</h2>
+      <p>
+        Imagens reais, missões e descobertas recentes sobre buracos negros estão
+        a um clique.
+      </p>
+      <div class="actions">
+        <a
+          class="btn"
+          href="https://science.nasa.gov/universe/black-holes/"
+          target="_blank"
+          rel="noopener"
+          >Explorar buracos negros na NASA</a
+        >
+        <button
+          type="button"
+          class="btn ghost"
+          id="sbOpen"
+          aria-expanded="false"
+        >
+          Liberar câmera 3D
+        </button>
+      </div>
+      <footer>
+        Visualização artística feita com shaders em Three.js, inspirada em
+        projetos como MisterPrada/singularity. As distâncias mostradas são
+        ilustrativas.
+      </footer>
+    </section>
 
-    /* ---------- WebGL: espaço, cometas e buraco negro ---------- */
-    const glc = $('#gl');
-    const renderer = new THREE.WebGLRenderer({ canvas: glc, antialias: false });
-    const pr = Math.min(devicePixelRatio, 1.5);
-    renderer.setPixelRatio(pr);
-    const U = { uR: { value: new THREE.Vector2() }, uT: { value: 0 }, uDiskPhase: { value: 0 }, uZ: { value: 0 }, uTilt: { value: .36 }, uE: { value: 0 }, uG: { value: 0 }, uM: { value: new THREE.Vector2() }, uMs: { value: 0 }, uK: { value: 0 }, uRoll: { value: 0 } };
-    const mat = new THREE.ShaderMaterial({
-      uniforms: U,
-      vertexShader: 'void main(){gl_Position=vec4(position.xy,0.,1.);}',
-      fragmentShader: `precision highp float;
-uniform vec2 uR,uM;uniform float uT,uDiskPhase,uZ,uTilt,uE,uG,uMs,uK,uRoll;
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+      const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const $ = (s) => document.querySelector(s);
+      const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+      const sstep = (a, b, x) => {
+        const t = clamp((x - a) / (b - a));
+        return t * t * (3 - 2 * t);
+      };
+
+      /* ---------- WebGL: espaço, cometas e buraco negro ---------- */
+      const glc = $("#gl");
+      const renderer = new THREE.WebGLRenderer({
+        canvas: glc,
+        antialias: false,
+      });
+      const pr = Math.min(devicePixelRatio, 1.5);
+      renderer.setPixelRatio(pr);
+      const U = {
+        uR: { value: new THREE.Vector2() },
+        uT: { value: 0 },
+        uDiskPhase: { value: 0 },
+        uZ: { value: 0 },
+        uTilt: { value: 0.36 },
+        uE: { value: 0 },
+        uG: { value: 0 },
+        uM: { value: new THREE.Vector2() },
+        uMs: { value: 0 },
+        uK: { value: 0 },
+        uRoll: { value: 0 },
+        uU: { value: 1 },
+      };
+      const mat = new THREE.ShaderMaterial({
+        uniforms: U,
+        vertexShader: "void main(){gl_Position=vec4(position.xy,0.,1.);}",
+        fragmentShader: `precision highp float;
+uniform vec2 uR,uM;uniform float uT,uDiskPhase,uZ,uTilt,uE,uG,uMs,uK,uRoll,uU;
 float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float nz(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
  return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
@@ -801,7 +1180,7 @@ float comet(vec2 p,float i){
  float hg=exp(-dot(d,d)/.00012);
  return (tail*.5+hg)*smoothstep(0.,.1,t)*(1.-smoothstep(.85,1.,t))*.45;}
 void main(){
- vec2 p=(gl_FragCoord.xy-.5*uR)/uR.y;
+ vec2 p=(gl_FragCoord.xy-.5*uR)/uU;
  float G=uG,Gs=smoothstep(.02,.35,G);
  float R=max(mix(.09,.4,uZ)*smoothstep(0.,.6,G),1e-3);
  float r=length(p);vec2 dir=p/max(r,1e-4);
@@ -867,230 +1246,663 @@ void main(){
  c=1.-exp(-c*1.15);
  c*=1.-.35*smoothstep(.5,1.1,r);
  gl_FragColor=vec4(c,1.);
-}`});
-    const scene = new THREE.Scene(), cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat));
+}`,
+      });
+      const scene = new THREE.Scene(),
+        cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+      scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat));
 
-    /* ---------- carrossel cilíndrico ---------- */
-    const items = [
-      ['Lente gravitacional', 'A luz se curva', 'A massa curva a trajetória da luz. Galáxias distantes aparecem deformadas em arcos e anéis, e o mesmo objeto pode surgir em mais de uma posição.', 30],
-      ['Dilatação do tempo', 'O relógio desacelera', 'Quanto mais perto do horizonte, mais devagar o tempo passa para quem está lá em comparação com quem observa de longe. Visto de fora, quem cai parece congelar na borda.', 215],
-      ['Disco de acreção', 'Gás em espiral', 'Gás e poeira giram em espiral, aquecem por atrito e brilham em raios X e luz visível. É a parte mais luminosa do sistema.', 20],
-      ['Espaguetificação', 'Maré extrema', 'A força de maré é muito maior nos pés do que na cabeça de quem cai. Em buracos negros de massa estelar, o corpo seria esticado antes de cruzar o horizonte.', 340],
-      ['Radiação Hawking', 'Evaporação lenta', 'Efeitos quânticos perto do horizonte fazem o buraco negro emitir uma radiação muito fraca e perder massa, ao longo de tempos imensos.', 270],
-      ['Jatos relativísticos', 'Matéria a quase c', 'Campos magnéticos lançam matéria a velocidades próximas à da luz, em jatos que podem se estender por milhares de anos-luz.', 170]];
-    const N = items.length, STEP = 360 / N, ring = $('#ring');
-    const cards = items.map((it, i) => {
-      const b = document.createElement('button'); b.className = 'card';
-      b.innerHTML = `<div class="orb" style="background:radial-gradient(circle at 35% 35%,hsl(${it[3]} 90% 75%),hsl(${it[3]} 80% 40%) 55%,transparent 72%)"></div><h3>${it[0]}</h3><span>${it[1]}</span>`;
-      b.addEventListener('click', () => goTo(i)); ring.appendChild(b); return b;
-    });
-    function layout() {
-      const w = cards[0].offsetWidth, R = w / 2 / Math.tan(Math.PI / N) + 24;
-      cards.forEach((c, i) => c.style.transform = `rotateY(${i * STEP}deg) translateZ(${R}px)`);
-    }
-    const hz = $('#horizon');
-    function goTo(i) {
-      const span = hz.offsetHeight - innerHeight;
-      scrollTo({ top: hz.offsetTop + span * (.05 + .9 * i / (N - 1)), behavior: reduce ? 'auto' : 'smooth' });
-    }
-
-    /* ---------- grade do espaço-tempo + fótons (Schwarzschild, Rs = 1) ---------- */
-    const gc = $('#grid'), gx = gc.getContext('2d');
-    let W = 0, H = 0, S = 30, cx = 0, cy = 0, mDepth = 0; const EL = .42, photons = []; let lastShot = 0;
-    function sizeCanvas(c) { const r = c.getBoundingClientRect(); c.width = r.width * pr; c.height = r.height * pr; return [r.width, r.height]; }
-    function proj(x, y) {
-      const r = Math.max(Math.hypot(x, y), 1); const hh = -9 * mDepth * 1.35 / (.35 + r);
-      return [cx + x * S, cy - (hh * Math.cos(EL) + y * Math.sin(EL)) * S];
-    }
-    function launch(b) {
-      const sg = b < 0 ? -1 : 1, bb = Math.max(Math.abs(b), .3);
-      let phi = Math.asin(bb / 30), u = 1 / 30, du = Math.cos(phi) / bb, cap = false; const pts = [];
-      for (let k = 0; k < 6000; k++) {
-        const d = .01; du += (-u + 1.5 * u * u) * d; u += du * d; phi += d;
-        if (u >= 1) { cap = true; break; } if (u < 1 / 30 && du < 0) break;
-        const r = 1 / u; if (r <= 16) pts.push([-r * Math.cos(phi), sg * r * Math.sin(phi)]);
+      /* tamanho do WebGL: medido pelo canvas (100lvh), então não muda quando a barra de endereço
+       do celular some/aparece. rs = escala de resolução, reduzida sozinha se o aparelho engasgar. */
+      let rs = 1,
+        GW = 0,
+        GH = 0,
+        UNIT = 1,
+        qT = 0,
+        qE = 16,
+        qN = 0;
+      const dbs = new THREE.Vector2();
+      /* unidade do shader: altura em paisagem (igual ao original); em retrato usa a largura, com folga de até 30% */
+      const glUnit = (w, h) =>
+        Math.min(w, h) * (1 + 0.3 * clamp((1 - w / h) / 0.4));
+      function applyGL() {
+        GW = glc.clientWidth || innerWidth;
+        GH = glc.clientHeight || innerHeight;
+        UNIT = glUnit(GW, GH);
+        renderer.setPixelRatio(pr * rs);
+        renderer.setSize(GW, GH, false);
+        renderer.getDrawingBufferSize(dbs);
+        U.uR.value.copy(dbs);
+        U.uU.value = UNIT * pr * rs;
       }
-      if (photons.length > 14) photons.shift(); photons.push({ pts, cap, i: 0, done: 0 });
-    }
-    function shoot(e) {
-      if (mDepth < .4) return; const n = performance.now(); if (n - lastShot < 90) return; lastShot = n;
-      const r = gc.getBoundingClientRect(); launch(clamp(-((e.clientY - r.top) - cy) / (S * Math.sin(EL)), -8, 8));
-    }
-    gc.addEventListener('pointermove', e => { if (e.pointerType === 'mouse') shoot(e); });
-    gc.addEventListener('pointerdown', e => { lastShot = 0; shoot(e); });
-    function drawGrid() {
-      gx.setTransform(pr, 0, 0, pr, 0, 0); gx.clearRect(0, 0, W, H);
-      const line = (f, n, col, w, dash) => {
-        gx.beginPath(); for (let k = 0; k <= n; k++) { const [a, b] = f(k / n); k ? gx.lineTo(a, b) : gx.moveTo(a, b); }
-        gx.strokeStyle = col; gx.lineWidth = w; gx.setLineDash(dash || []); gx.stroke();
+
+      /* ---------- carrossel cilíndrico ---------- */
+      const items = [
+        [
+          "Lente gravitacional",
+          "A luz se curva",
+          "A massa curva a trajetória da luz. Galáxias distantes aparecem deformadas em arcos e anéis, e o mesmo objeto pode surgir em mais de uma posição.",
+          30,
+        ],
+        [
+          "Dilatação do tempo",
+          "O relógio desacelera",
+          "Quanto mais perto do horizonte, mais devagar o tempo passa para quem está lá em comparação com quem observa de longe. Visto de fora, quem cai parece congelar na borda.",
+          215,
+        ],
+        [
+          "Disco de acreção",
+          "Gás em espiral",
+          "Gás e poeira giram em espiral, aquecem por atrito e brilham em raios X e luz visível. É a parte mais luminosa do sistema.",
+          20,
+        ],
+        [
+          "Espaguetificação",
+          "Maré extrema",
+          "A força de maré é muito maior nos pés do que na cabeça de quem cai. Em buracos negros de massa estelar, o corpo seria esticado antes de cruzar o horizonte.",
+          340,
+        ],
+        [
+          "Radiação Hawking",
+          "Evaporação lenta",
+          "Efeitos quânticos perto do horizonte fazem o buraco negro emitir uma radiação muito fraca e perder massa, ao longo de tempos imensos.",
+          270,
+        ],
+        [
+          "Jatos relativísticos",
+          "Matéria a quase c",
+          "Campos magnéticos lançam matéria a velocidades próximas à da luz, em jatos que podem se estender por milhares de anos-luz.",
+          170,
+        ],
+      ];
+      const N = items.length,
+        STEP = 360 / N,
+        ring = $("#ring");
+      const cards = items.map((it, i) => {
+        const b = document.createElement("button");
+        b.className = "card";
+        b.innerHTML = `<div class="orb" style="background:radial-gradient(circle at 35% 35%,hsl(${it[3]} 90% 75%),hsl(${it[3]} 80% 40%) 55%,transparent 72%)"></div><h3>${it[0]}</h3><span>${it[1]}</span>`;
+        b.addEventListener("click", () => goTo(i));
+        ring.appendChild(b);
+        return b;
+      });
+      function layout() {
+        const w = cards[0].offsetWidth,
+          R = w / 2 / Math.tan(Math.PI / N) + 24;
+        cards.forEach(
+          (c, i) =>
+            (c.style.transform = `rotateY(${i * STEP}deg) translateZ(${R}px)`),
+        );
+      }
+      const hz = $("#horizon");
+      function goTo(i) {
+        const span = hz.offsetHeight - innerHeight;
+        scrollTo({
+          top: hz.offsetTop + span * (0.05 + (0.9 * i) / (N - 1)),
+          behavior: reduce ? "auto" : "smooth",
+        });
+      }
+
+      /* ---------- grade do espaço-tempo + fótons (Schwarzschild, Rs = 1) ---------- */
+      const gc = $("#grid"),
+        gx = gc.getContext("2d");
+      let W = 0,
+        H = 0,
+        S = 30,
+        cx = 0,
+        cy = 0,
+        mDepth = 0;
+      const EL = 0.42,
+        photons = [];
+      let lastShot = 0;
+      function sizeCanvas(c) {
+        const r = c.getBoundingClientRect(),
+          w = Math.round(r.width * pr),
+          h = Math.round(r.height * pr);
+        if (c.width !== w || c.height !== h) {
+          c.width = w;
+          c.height = h;
+        }
+        return [r.width, r.height];
+      }
+      function proj(x, y) {
+        const r = Math.max(Math.hypot(x, y), 1);
+        const hh = (-9 * mDepth * 1.35) / (0.35 + r);
+        return [cx + x * S, cy - (hh * Math.cos(EL) + y * Math.sin(EL)) * S];
+      }
+      function launch(b) {
+        const sg = b < 0 ? -1 : 1,
+          bb = Math.max(Math.abs(b), 0.3);
+        let phi = Math.asin(bb / 30),
+          u = 1 / 30,
+          du = Math.cos(phi) / bb,
+          cap = false;
+        const pts = [];
+        for (let k = 0; k < 6000; k++) {
+          const d = 0.01;
+          du += (-u + 1.5 * u * u) * d;
+          u += du * d;
+          phi += d;
+          if (u >= 1) {
+            cap = true;
+            break;
+          }
+          if (u < 1 / 30 && du < 0) break;
+          const r = 1 / u;
+          if (r <= 16) pts.push([-r * Math.cos(phi), sg * r * Math.sin(phi)]);
+        }
+        if (photons.length > 14) photons.shift();
+        photons.push({ pts, cap, i: 0, done: 0 });
+      }
+      function shoot(e) {
+        if (mDepth < 0.4) return;
+        const n = performance.now();
+        if (n - lastShot < 90) return;
+        lastShot = n;
+        const r = gc.getBoundingClientRect();
+        launch(clamp(-(e.clientY - r.top - cy) / (S * Math.sin(EL)), -8, 8));
+      }
+      gc.addEventListener("pointermove", (e) => {
+        if (e.pointerType === "mouse") shoot(e);
+      });
+      gc.addEventListener("pointerdown", (e) => {
+        lastShot = 0;
+        shoot(e);
+      });
+      function drawGrid() {
+        gx.setTransform(pr, 0, 0, pr, 0, 0);
+        gx.clearRect(0, 0, W, H);
+        const line = (f, n, col, w, dash) => {
+          gx.beginPath();
+          for (let k = 0; k <= n; k++) {
+            const [a, b] = f(k / n);
+            k ? gx.lineTo(a, b) : gx.moveTo(a, b);
+          }
+          gx.strokeStyle = col;
+          gx.lineWidth = w;
+          gx.setLineDash(dash || []);
+          gx.stroke();
+        };
+        [1.5, 2, 2.6, 3.4, 4.4, 5.6, 7, 8.6, 10.4, 12.4, 14.5].forEach((r) =>
+          line(
+            (t) => proj(r * Math.cos(t * 6.2832), r * Math.sin(t * 6.2832)),
+            96,
+            "rgba(143,184,255,.28)",
+            1,
+          ),
+        );
+        for (let j = 0; j < 28; j++) {
+          const a = (j / 28) * 6.2832;
+          line(
+            (t) => {
+              const r = 1 + Math.pow(t, 1.8) * 14;
+              return proj(r * Math.cos(a), r * Math.sin(a));
+            },
+            30,
+            "rgba(143,184,255,.22)",
+            1,
+          );
+        }
+        if (mDepth > 0.3) {
+          line(
+            (t) => proj(Math.cos(t * 6.2832), Math.sin(t * 6.2832)),
+            80,
+            "#ff6a4a",
+            2,
+          );
+          line(
+            (t) => proj(1.5 * Math.cos(t * 6.2832), 1.5 * Math.sin(t * 6.2832)),
+            80,
+            "rgba(255,154,60,.9)",
+            1.5,
+            [5, 4],
+          );
+          gx.font = "12px Instrument Sans,sans-serif";
+          gx.fillStyle = "#ff9a80";
+          const a = proj(1, 0),
+            b = proj(1.5, 0);
+          gx.fillText("horizonte (1 Rs)", a[0] - 110, a[1] + 34);
+          gx.fillStyle = "#ffc98a";
+          gx.fillText("esfera de fótons (1,5 Rs)", b[0] + 18, b[1] - 6);
+        }
+        for (let k = photons.length - 1; k >= 0; k--) {
+          const p = photons[k],
+            n = p.pts.length;
+          if (n < 2) {
+            photons.splice(k, 1);
+            continue;
+          }
+          p.i = Math.min(n - 1, p.i + (reduce ? n : 3));
+          const s = Math.max(0, p.i - 70);
+          gx.setLineDash([]);
+          gx.lineWidth = 2;
+          gx.strokeStyle = p.cap ? "#ff6a4a" : "#ffd9a0";
+          for (let j = s + 1; j <= p.i; j++) {
+            const A = proj(p.pts[j - 1][0], p.pts[j - 1][1]),
+              B = proj(p.pts[j][0], p.pts[j][1]);
+            gx.globalAlpha = (j - s) / (p.i - s + 1);
+            gx.beginPath();
+            gx.moveTo(A[0], A[1]);
+            gx.lineTo(B[0], B[1]);
+            gx.stroke();
+          }
+          gx.globalAlpha = 1;
+          const hd = proj(p.pts[p.i][0], p.pts[p.i][1]);
+          gx.fillStyle = "#fff";
+          gx.beginPath();
+          gx.arc(hd[0], hd[1], 3, 0, 6.2832);
+          gx.fill();
+          if (p.i >= n - 1) {
+            p.done++;
+            if (p.cap) {
+              gx.strokeStyle = "rgba(255,106,74," + (1 - p.done / 40) + ")";
+              gx.beginPath();
+              gx.arc(hd[0], hd[1], 4 + p.done * 0.6, 0, 6.2832);
+              gx.stroke();
+            }
+            if (p.done > 40) photons.splice(k, 1);
+          }
+        }
+      }
+
+      /* ---------- diagrama de espaguetificação ---------- */
+      const dc = $("#dg"),
+        dx = dc.getContext("2d");
+      let DW = 0,
+        DH = 0;
+      function drawDiagram(t) {
+        dx.setTransform(pr, 0, 0, pr, 0, 0);
+        dx.clearRect(0, 0, DW, DH);
+        const hx = DW / 2,
+          hy = DH * 0.93,
+          k = (DH * 0.82) / 10,
+          d = 8 - 6.85 * t,
+          F = 1 + 3.2 / (d * d);
+        dx.beginPath();
+        dx.arc(hx, hy, DW * 0.14, 0, 6.2832);
+        dx.fillStyle = "#000";
+        dx.fill();
+        dx.strokeStyle = "rgba(255,154,60,.9)";
+        dx.lineWidth = 2;
+        dx.stroke();
+        dx.setLineDash([3, 6]);
+        dx.strokeStyle = "rgba(143,184,255,.35)";
+        dx.beginPath();
+        dx.moveTo(hx, 0);
+        dx.lineTo(hx, hy);
+        dx.stroke();
+        dx.setLineDash([]);
+        const ys = [];
+        for (let i = 0; i < 11; i++) ys.push(d + (i - 5) * 0.3 * F);
+        dx.strokeStyle = `hsl(${Math.max(8, 40 - (F - 1) * 14)} 90% 65%)`;
+        dx.lineWidth = 2;
+        dx.beginPath();
+        let st = false;
+        ys.forEach((y) => {
+          if (y < 0.4) return;
+          const py = hy - y * k;
+          st ? dx.lineTo(hx, py) : dx.moveTo(hx, py);
+          st = true;
+        });
+        dx.stroke();
+        ys.forEach((y) => {
+          if (y < 0.4) return;
+          dx.beginPath();
+          dx.ellipse(
+            hx,
+            hy - y * k,
+            7 / Math.sqrt(F) + 2,
+            4 + 3 / F,
+            0,
+            0,
+            6.2832,
+          );
+          dx.fillStyle = "#ffd9a0";
+          dx.fill();
+        });
+        dx.fillStyle = "#a7a49c";
+        dx.font = "13px Instrument Sans,sans-serif";
+        dx.textAlign = "center";
+        dx.fillText("esticamento ×" + F.toFixed(1).replace(".", ","), hx, 18);
+        dx.textAlign = "start";
+      }
+
+      /* ---------- scroll ---------- */
+      function resize() {
+        if (glc.clientWidth !== GW || glc.clientHeight !== GH) applyGL();
+        [W, H] = sizeCanvas(gc);
+        S = Math.min(W / 30, H / 22);
+        cx = W / 2;
+        cy = H * (W < H ? 0.46 : 0.4);
+        [DW, DH] = sizeCanvas(dc);
+        layout();
+      }
+      function pw(y, xs, vs) {
+        if (y <= xs[0]) return vs[0];
+        for (let i = 1; i < xs.length; i++)
+          if (y <= xs[i]) {
+            const t = (y - xs[i - 1]) / (xs[i] - xs[i - 1]);
+            return vs[i - 1] + (vs[i] - vs[i - 1]) * t;
+          }
+        return vs[vs.length - 1];
+      }
+      function local(el) {
+        return clamp(
+          (scrollY - el.offsetTop) / (el.offsetHeight - innerHeight),
+        );
+      }
+      function beats(sec, p) {
+        const bs = sec.querySelectorAll(".beat"),
+          n = bs.length;
+        bs.forEach(
+          (b, i) =>
+            (b.style.opacity = clamp(1 - Math.abs(p * n - i - 0.5) * 1.9)),
+        );
+      }
+      const cur = { z: 0, t: 0.36, e: 0, g: 0, rot: 0, k: 0, roll: 0, ms: 0 };
+      const sH = $("#hero"),
+        sP = $("#space"),
+        sS = $("#sing"),
+        sC = $("#cta"),
+        dist = $("#dist"),
+        pd = $("#pd"),
+        pn = $("#pn"),
+        hud = $(".hud");
+      function frame(now) {
+        /* aparelho lento (<~26 fps de média): baixa a resolução do shader em passos, até 55%.
+         Limite alto de propósito: o modo de economia do iOS trava em 30 fps e não deve disparar isso. */
+        if (!reduce && !document.hidden) {
+          const d = Math.min(now - qT, 100);
+          qT = now;
+          qE += (d - qE) * 0.08;
+          if (++qN > 90 && qE > 38 && rs > 0.55) {
+            rs = Math.max(0.55, rs - 0.15);
+            applyGL();
+            qE = 16;
+            qN = 0;
+          }
+        }
+        const y = scrollY,
+          vh = innerHeight,
+          yE = sP.offsetTop,
+          yH = hz.offsetTop,
+          yS = sS.offsetTop,
+          yC = sC.offsetTop;
+        const xs = [0, yE - vh * 0.5, yE, yH, yS, yC - vh, yC - vh * 0.15];
+        let tz = pw(y, xs, [0, 0.1, 0.14, 0.55, 0.78, 0.95, 0.95]),
+          tt = pw(y, xs, [0.36, 0.36, 0.34, 0.2, 0.14, 0.14, 0.14]),
+          te = pw(y, xs, [0, 0, 0, 0, 0, 1, 0]),
+          tg = pw(y, xs, [0, 1, 1, 1, 1, 1, 0]);
+        if (sb.on) {
+          tz = sb.zoom;
+          tt = sb.tilt;
+          te = 0;
+          tg = 1;
+        }
+        const k = reduce ? 1 : 0.09;
+        cur.z += (tz - cur.z) * k;
+        cur.t += (tt - cur.t) * k;
+        cur.e += (te - cur.e) * k;
+        cur.g += (tg - cur.g) * k;
+        cur.k += (bh.k - cur.k) * (reduce ? 1 : 0.06);
+        cur.roll += ((sb.on ? sb.roll : 0) - cur.roll) * k;
+        U.uZ.value = cur.z;
+        U.uTilt.value = cur.t;
+        U.uE.value = cur.e;
+        U.uG.value = cur.g;
+        U.uK.value = cur.k;
+        U.uRoll.value = cur.roll;
+        if (!reduce) {
+          const dt = Math.min(now - lastNow, 64);
+          U.uT.value = now / 1000;
+          ph = (ph + dt * 0.00018 * (1 + 0.8 * cur.k)) % 6.2831853;
+          U.uDiskPhase.value = ph;
+        }
+        lastNow = now;
+        glc.style.opacity = sb.on
+          ? 1
+          : pw(
+              y,
+              [yE - vh * 0.6, yE, yH - vh * 0.8, yH - vh * 0.1],
+              [1, 0.1, 0.1, 1],
+            );
+        dist.textContent =
+          cur.g < 0.05
+            ? "—"
+            : Math.max(
+                1,
+                Math.round(2000 * Math.pow(1 - cur.z, 3) + 1),
+              ).toLocaleString("pt-BR");
+        hud.style.opacity = y > yS + vh * 1.2 || cur.g < 0.05 || sb.on ? 0 : 1;
+        /* hero */
+        const hp = local(sH);
+        const mt =
+          reduce || sb.on || !mouse.has || y > yE
+            ? 0
+            : 1 - sstep(0.55, 0.9, hp);
+        cur.ms += (mt - cur.ms) * 0.08;
+        mouse.x += (mouse.tx - mouse.x) * 0.18;
+        mouse.y += (mouse.ty - mouse.y) * 0.18;
+        U.uM.value.set(mouse.x, mouse.y);
+        U.uMs.value = cur.ms;
+        railUpdate(y);
+        $("#h1w").style.opacity = 1 - clamp((hp - 0.3) / 0.25);
+        $("#note").style.opacity =
+          clamp((hp - 0.45) / 0.2) * (1 - clamp((hp - 0.85) / 0.15));
+        /* espaço-tempo */
+        const sp = local(sP);
+        beats(sP, sp);
+        mDepth += (sstep(0.06, 0.4, sp) - mDepth) * (reduce ? 1 : 0.1);
+        if (y > yE - vh && y < yH) drawGrid();
+        /* carrossel */
+        const cp = local(hz),
+          target = clamp((cp - 0.05) / 0.9) * (N - 1) * STEP;
+        cur.rot += (target - cur.rot) * (reduce ? 1 : 0.12);
+        ring.style.transform = `rotateY(${-cur.rot}deg)`;
+        cards.forEach((c, i) => {
+          const d = Math.abs(((i * STEP - cur.rot + 540) % 360) - 180);
+          c.style.opacity = clamp(1 - d / 110, 0.15, 1);
+        });
+        const idx = clamp(Math.round(cur.rot / STEP), 0, N - 1);
+        if (pn.dataset.i != idx) {
+          pn.dataset.i = idx;
+          pn.textContent = `${idx + 1} de ${N}`;
+          pd.textContent = items[idx][2];
+        }
+        /* singularidade */
+        const gp = local(sS);
+        beats(sS, gp);
+        dc.style.opacity = sS.querySelector(".beat").style.opacity;
+        if (y > yS - vh && y < yC) drawDiagram(clamp(gp / 0.45));
+        renderer.render(scene, cam);
+        requestAnimationFrame(frame);
+      }
+      /* ---------- trilho de progresso ---------- */
+      const stg = [
+        ["Espaço aberto", () => 0],
+        [
+          "Disco de acreção",
+          () => sH.offsetTop + (sH.offsetHeight - innerHeight) * 0.42,
+        ],
+        ["Espaço-tempo", () => sP.offsetTop],
+        ["Horizonte", () => hz.offsetTop],
+        ["Singularidade", () => sS.offsetTop],
+        ["Retorno ao espaço", () => sC.offsetTop - innerHeight * 0.3],
+      ];
+      const rail = $("#rail"),
+        rf = $("#rf");
+      let lastStage = -1,
+        ph = 0,
+        lastNow = 0;
+      const dots = stg.map(([n, f]) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "rd";
+        b.setAttribute("aria-label", n);
+        b.innerHTML = `<span>${n}</span>`;
+        b.addEventListener("click", () =>
+          scrollTo({ top: f(), behavior: reduce ? "auto" : "smooth" }),
+        );
+        rail.appendChild(b);
+        return b;
+      });
+      function railUpdate(y) {
+        const st = stg.map((x) => x[1]()),
+          ref = y + innerHeight * 0.3;
+        let i = 0;
+        st.forEach((v, j) => {
+          if (ref >= v) i = j;
+        });
+        const end =
+          i < st.length - 1
+            ? st[i + 1]
+            : Math.max(
+                document.documentElement.scrollHeight - innerHeight * 0.7,
+                st[i] + 1,
+              );
+        rf.style.height =
+          ((i + clamp((ref - st[i]) / (end - st[i]))) / (st.length - 1)) * 100 +
+          "%";
+        if (i !== lastStage) {
+          lastStage = i;
+          dots.forEach((d, j) => {
+            d.classList.toggle("on", j === i);
+            d.classList.toggle("past", j < i);
+            j === i
+              ? d.setAttribute("aria-current", "step")
+              : d.removeAttribute("aria-current");
+          });
+        }
+      }
+
+      /* ---------- lente gravitacional no cursor (Hero) ---------- */
+      const mouse = { x: 0, y: 0, tx: 0, ty: 0, has: false };
+      addEventListener("pointermove", (e) => {
+        if (e.pointerType !== "mouse") return;
+        mouse.tx = (e.clientX - GW / 2) / UNIT;
+        mouse.ty = (GH / 2 - e.clientY) / UNIT;
+        if (!mouse.has) {
+          mouse.x = mouse.tx;
+          mouse.y = mouse.ty;
+          mouse.has = true;
+        }
+      });
+
+      /* ---------- tipo de buraco negro ---------- */
+      const bh = { k: 0 },
+        caps = [
+          "Supermassivo · milhões a bilhões de M☉ · disco alaranjado",
+          "Massa estelar · ~10 M☉ · disco mais quente e azulado",
+        ];
+      const bhBtns = document.querySelectorAll("[data-bh]");
+      bhBtns.forEach((b) =>
+        b.addEventListener("click", () => {
+          bh.k = +b.dataset.bh;
+          $("#bhsel").dataset.k = bh.k;
+          $("#bhcap").textContent = caps[bh.k];
+          bhBtns.forEach((x) => x.setAttribute("aria-pressed", x === b));
+        }),
+      );
+
+      /* ---------- modo câmera livre (sandbox) ---------- */
+      const SB0 = { tilt: 0.36, roll: 0, zoom: 0.2 },
+        sb = { on: false, ...SB0 };
+      const sbOpen = $("#sbOpen"),
+        secs = document.querySelectorAll("section"),
+        ptrs = new Map();
+      let pinch = 0;
+      const sbZoom = (d) => (sb.zoom = clamp(sb.zoom + d, 0.02, 0.5)),
+        sbTilt = (d) => (sb.tilt = clamp(sb.tilt + d, 0.08, 0.9));
+      function setSB(on) {
+        if (on) Object.assign(sb, SB0);
+        sb.on = on;
+        document.body.classList.toggle("sandbox", on);
+        document.documentElement.style.overflow = document.body.style.overflow =
+          on ? "hidden" : "";
+        secs.forEach((x) => (x.inert = on));
+        rail.inert = on;
+        sbOpen.setAttribute("aria-expanded", on);
+        (on ? $("#sbExit") : sbOpen).focus({ preventScroll: true });
+      }
+      sbOpen.addEventListener("click", () => setSB(true));
+      $("#sbExit").addEventListener("click", () => setSB(false));
+      $("#sbReset").addEventListener("click", () => Object.assign(sb, SB0));
+      const pdist = () => {
+        const [a, b] = [...ptrs.values()];
+        return Math.hypot(a[0] - b[0], a[1] - b[1]);
       };
-      [1.5, 2, 2.6, 3.4, 4.4, 5.6, 7, 8.6, 10.4, 12.4, 14.5].forEach(r => line(t => proj(r * Math.cos(t * 6.2832), r * Math.sin(t * 6.2832)), 96, 'rgba(143,184,255,.28)', 1));
-      for (let j = 0; j < 28; j++) { const a = j / 28 * 6.2832; line(t => { const r = 1 + Math.pow(t, 1.8) * 14; return proj(r * Math.cos(a), r * Math.sin(a)); }, 30, 'rgba(143,184,255,.22)', 1); }
-      if (mDepth > .3) {
-        line(t => proj(Math.cos(t * 6.2832), Math.sin(t * 6.2832)), 80, '#ff6a4a', 2);
-        line(t => proj(1.5 * Math.cos(t * 6.2832), 1.5 * Math.sin(t * 6.2832)), 80, 'rgba(255,154,60,.9)', 1.5, [5, 4]);
-        gx.font = '12px Instrument Sans,sans-serif'; gx.fillStyle = '#ff9a80'; const a = proj(1, 0), b = proj(1.5, 0);
-        gx.fillText('horizonte (1 Rs)', a[0] - 110, a[1] + 34); gx.fillStyle = '#ffc98a'; gx.fillText('esfera de fótons (1,5 Rs)', b[0] + 18, b[1] - 6);
-      }
-      for (let k = photons.length - 1; k >= 0; k--) {
-        const p = photons[k], n = p.pts.length; if (n < 2) { photons.splice(k, 1); continue; }
-        p.i = Math.min(n - 1, p.i + (reduce ? n : 3)); const s = Math.max(0, p.i - 70);
-        gx.setLineDash([]); gx.lineWidth = 2; gx.strokeStyle = p.cap ? '#ff6a4a' : '#ffd9a0';
-        for (let j = s + 1; j <= p.i; j++) {
-          const A = proj(p.pts[j - 1][0], p.pts[j - 1][1]), B = proj(p.pts[j][0], p.pts[j][1]);
-          gx.globalAlpha = (j - s) / (p.i - s + 1); gx.beginPath(); gx.moveTo(A[0], A[1]); gx.lineTo(B[0], B[1]); gx.stroke();
+      glc.addEventListener("pointerdown", (e) => {
+        if (!sb.on) return;
+        glc.setPointerCapture(e.pointerId);
+        ptrs.set(e.pointerId, [e.clientX, e.clientY]);
+        document.body.classList.add("drag");
+        if (ptrs.size === 2) pinch = pdist();
+      });
+      glc.addEventListener("pointermove", (e) => {
+        if (!sb.on || !ptrs.has(e.pointerId)) return;
+        const o = ptrs.get(e.pointerId),
+          dx = e.clientX - o[0],
+          dy = e.clientY - o[1];
+        ptrs.set(e.pointerId, [e.clientX, e.clientY]);
+        if (ptrs.size === 2) {
+          const d = pdist();
+          if (pinch) sbZoom((d - pinch) * 0.0012);
+          pinch = d;
+          return;
         }
-        gx.globalAlpha = 1; const hd = proj(p.pts[p.i][0], p.pts[p.i][1]);
-        gx.fillStyle = '#fff'; gx.beginPath(); gx.arc(hd[0], hd[1], 3, 0, 6.2832); gx.fill();
-        if (p.i >= n - 1) {
-          p.done++; if (p.cap) { gx.strokeStyle = 'rgba(255,106,74,' + (1 - p.done / 40) + ')'; gx.beginPath(); gx.arc(hd[0], hd[1], 4 + p.done * .6, 0, 6.2832); gx.stroke(); }
-          if (p.done > 40) photons.splice(k, 1);
+        sb.roll -= dx * 0.006;
+        sbTilt(dy * 0.004);
+      });
+      const pUp = (e) => {
+        ptrs.delete(e.pointerId);
+        pinch = 0;
+        if (!ptrs.size) document.body.classList.remove("drag");
+      };
+      glc.addEventListener("pointerup", pUp);
+      glc.addEventListener("pointercancel", pUp);
+      glc.addEventListener(
+        "wheel",
+        (e) => {
+          if (!sb.on) return;
+          e.preventDefault();
+          sbZoom(-e.deltaY * 0.0004);
+        },
+        { passive: false },
+      );
+      addEventListener("keydown", (e) => {
+        if (!sb.on) return;
+        const m = {
+          ArrowLeft: () => (sb.roll += 0.08),
+          ArrowRight: () => (sb.roll -= 0.08),
+          ArrowUp: () => sbTilt(-0.04),
+          ArrowDown: () => sbTilt(0.04),
+          "+": () => sbZoom(0.02),
+          "=": () => sbZoom(0.02),
+          "-": () => sbZoom(-0.02),
+          Escape: () => setSB(false),
+        }[e.key];
+        if (m) {
+          e.preventDefault();
+          m();
         }
-      }
-    }
+      });
 
-    /* ---------- diagrama de espaguetificação ---------- */
-    const dc = $('#dg'), dx = dc.getContext('2d'); let DW = 0, DH = 0;
-    function drawDiagram(t) {
-      dx.setTransform(pr, 0, 0, pr, 0, 0); dx.clearRect(0, 0, DW, DH);
-      const hx = DW / 2, hy = DH * .93, k = DH * .82 / 10, d = 8 - 6.85 * t, F = 1 + 3.2 / (d * d);
-      dx.beginPath(); dx.arc(hx, hy, DW * .14, 0, 6.2832); dx.fillStyle = '#000'; dx.fill();
-      dx.strokeStyle = 'rgba(255,154,60,.9)'; dx.lineWidth = 2; dx.stroke();
-      dx.setLineDash([3, 6]); dx.strokeStyle = 'rgba(143,184,255,.35)'; dx.beginPath(); dx.moveTo(hx, 0); dx.lineTo(hx, hy); dx.stroke(); dx.setLineDash([]);
-      const ys = []; for (let i = 0; i < 11; i++)ys.push(d + (i - 5) * .3 * F);
-      dx.strokeStyle = `hsl(${Math.max(8, 40 - (F - 1) * 14)} 90% 65%)`; dx.lineWidth = 2; dx.beginPath();
-      let st = false; ys.forEach(y => { if (y < .4) return; const py = hy - y * k; st ? dx.lineTo(hx, py) : dx.moveTo(hx, py); st = true; }); dx.stroke();
-      ys.forEach(y => { if (y < .4) return; dx.beginPath(); dx.ellipse(hx, hy - y * k, 7 / Math.sqrt(F) + 2, 4 + 3 / F, 0, 0, 6.2832); dx.fillStyle = '#ffd9a0'; dx.fill(); });
-      dx.fillStyle = '#a7a49c'; dx.font = '13px Instrument Sans,sans-serif'; dx.textAlign = 'center';
-      dx.fillText('esticamento ×' + F.toFixed(1).replace('.', ','), hx, 18); dx.textAlign = 'start';
-    }
+      /* ---------- hover líquido nos botões do CTA ---------- */
+      document.querySelectorAll(".actions .btn").forEach((b) => {
+        const at = (e) => {
+          const r = b.getBoundingClientRect();
+          b.style.setProperty("--x", e.clientX - r.left + "px");
+          b.style.setProperty("--y", e.clientY - r.top + "px");
+          b.style.setProperty("--d", 2 * Math.hypot(r.width, r.height) + "px");
+        };
+        b.addEventListener("pointerenter", at);
+        b.addEventListener("pointerleave", at);
+      });
 
-    /* ---------- scroll ---------- */
-    function resize() {
-      renderer.setSize(innerWidth, innerHeight, false); U.uR.value.set(innerWidth * pr, innerHeight * pr);
-      [W, H] = sizeCanvas(gc); S = Math.min(W / 30, H / 22); cx = W / 2; cy = H * .4;[DW, DH] = sizeCanvas(dc); layout();
-    }
-    function pw(y, xs, vs) { if (y <= xs[0]) return vs[0]; for (let i = 1; i < xs.length; i++)if (y <= xs[i]) { const t = (y - xs[i - 1]) / (xs[i] - xs[i - 1]); return vs[i - 1] + (vs[i] - vs[i - 1]) * t; } return vs[vs.length - 1]; }
-    function local(el) { return clamp((scrollY - el.offsetTop) / (el.offsetHeight - innerHeight)); }
-    function beats(sec, p) {
-      const bs = sec.querySelectorAll('.beat'), n = bs.length;
-      bs.forEach((b, i) => b.style.opacity = clamp(1 - Math.abs(p * n - i - .5) * 1.9));
-    }
-    const cur = { z: 0, t: .36, e: 0, g: 0, rot: 0, k: 0, roll: 0, ms: 0 };
-    const sH = $('#hero'), sP = $('#space'), sS = $('#sing'), sC = $('#cta'), dist = $('#dist'), pd = $('#pd'), pn = $('#pn'), hud = $('.hud');
-    function frame(now) {
-      const y = scrollY, vh = innerHeight, yE = sP.offsetTop, yH = hz.offsetTop, yS = sS.offsetTop, yC = sC.offsetTop;
-      const xs = [0, yE - vh * .5, yE, yH, yS, yC - vh, yC - vh * .15];
-      let tz = pw(y, xs, [0, .1, .14, .55, .78, .95, .95]), tt = pw(y, xs, [.36, .36, .34, .2, .14, .14, .14]),
-        te = pw(y, xs, [0, 0, 0, 0, 0, 1, 0]), tg = pw(y, xs, [0, 1, 1, 1, 1, 1, 0]);
-      if (sb.on) { tz = sb.zoom; tt = sb.tilt; te = 0; tg = 1; }
-      const k = reduce ? 1 : .09;
-      cur.z += (tz - cur.z) * k; cur.t += (tt - cur.t) * k; cur.e += (te - cur.e) * k; cur.g += (tg - cur.g) * k;
-      cur.k += (bh.k - cur.k) * (reduce ? 1 : .06); cur.roll += ((sb.on ? sb.roll : 0) - cur.roll) * k;
-      U.uZ.value = cur.z; U.uTilt.value = cur.t; U.uE.value = cur.e; U.uG.value = cur.g; U.uK.value = cur.k; U.uRoll.value = cur.roll;
-      if (!reduce) { const dt = Math.min(now - lastNow, 64); U.uT.value = now / 1000; ph = (ph + dt * .00018 * (1 + .8 * cur.k)) % 6.2831853; U.uDiskPhase.value = ph; } lastNow = now;
-      glc.style.opacity = sb.on ? 1 : pw(y, [yE - vh * .6, yE, yH - vh * .8, yH - vh * .1], [1, .1, .1, 1]);
-      dist.textContent = cur.g < .05 ? '—' : Math.max(1, Math.round(2000 * Math.pow(1 - cur.z, 3) + 1)).toLocaleString('pt-BR');
-      hud.style.opacity = (y > yS + vh * 1.2 || cur.g < .05 || sb.on) ? 0 : 1;
-      /* hero */
-      const hp = local(sH);
-      const mt = (reduce || sb.on || !mouse.has || y > yE) ? 0 : 1 - sstep(.55, .9, hp);
-      cur.ms += (mt - cur.ms) * .08; mouse.x += (mouse.tx - mouse.x) * .18; mouse.y += (mouse.ty - mouse.y) * .18;
-      U.uM.value.set(mouse.x, mouse.y); U.uMs.value = cur.ms;
-      railUpdate(y);
-      $('#h1w').style.opacity = 1 - clamp((hp - .3) / .25);
-      $('#note').style.opacity = clamp((hp - .45) / .2) * (1 - clamp((hp - .85) / .15));
-      /* espaço-tempo */
-      const sp = local(sP); beats(sP, sp);
-      mDepth += (sstep(.06, .4, sp) - mDepth) * (reduce ? 1 : .1);
-      if (y > yE - vh && y < yH) drawGrid();
-      /* carrossel */
-      const cp = local(hz), target = clamp((cp - .05) / .9) * (N - 1) * STEP;
-      cur.rot += (target - cur.rot) * (reduce ? 1 : .12);
-      ring.style.transform = `rotateY(${-cur.rot}deg)`;
-      cards.forEach((c, i) => { const d = Math.abs(((i * STEP - cur.rot) + 540) % 360 - 180); c.style.opacity = clamp(1 - d / 110, .15, 1); });
-      const idx = clamp(Math.round(cur.rot / STEP), 0, N - 1);
-      if (pn.dataset.i != idx) { pn.dataset.i = idx; pn.textContent = `${idx + 1} de ${N}`; pd.textContent = items[idx][2]; }
-      /* singularidade */
-      const gp = local(sS); beats(sS, gp);
-      dc.style.opacity = sS.querySelector('.beat').style.opacity;
-      if (y > yS - vh && y < yC) drawDiagram(clamp(gp / .45));
-      renderer.render(scene, cam); requestAnimationFrame(frame);
-    }
-    /* ---------- trilho de progresso ---------- */
-    const stg = [['Espaço aberto', () => 0], ['Disco de acreção', () => sH.offsetTop + (sH.offsetHeight - innerHeight) * .42], ['Espaço-tempo', () => sP.offsetTop], ['Horizonte', () => hz.offsetTop], ['Singularidade', () => sS.offsetTop], ['Retorno ao espaço', () => sC.offsetTop - innerHeight * .3]];
-    const rail = $('#rail'), rf = $('#rf'); let lastStage = -1, ph = 0, lastNow = 0;
-    const dots = stg.map(([n, f]) => {
-      const b = document.createElement('button'); b.type = 'button'; b.className = 'rd'; b.setAttribute('aria-label', n); b.innerHTML = `<span>${n}</span>`;
-      b.addEventListener('click', () => scrollTo({ top: f(), behavior: reduce ? 'auto' : 'smooth' })); rail.appendChild(b); return b;
-    });
-    function railUpdate(y) {
-      const st = stg.map(x => x[1]()), ref = y + innerHeight * .3; let i = 0; st.forEach((v, j) => { if (ref >= v) i = j; });
-      const end = i < st.length - 1 ? st[i + 1] : Math.max(document.documentElement.scrollHeight - innerHeight * .7, st[i] + 1);
-      rf.style.height = ((i + clamp((ref - st[i]) / (end - st[i]))) / (st.length - 1) * 100) + '%';
-      if (i !== lastStage) { lastStage = i; dots.forEach((d, j) => { d.classList.toggle('on', j === i); d.classList.toggle('past', j < i); j === i ? d.setAttribute('aria-current', 'step') : d.removeAttribute('aria-current'); }); }
-    }
-
-    /* ---------- lente gravitacional no cursor (Hero) ---------- */
-    const mouse = { x: 0, y: 0, tx: 0, ty: 0, has: false };
-    addEventListener('pointermove', e => {
-      if (e.pointerType !== 'mouse') return;
-      mouse.tx = (e.clientX - innerWidth / 2) / innerHeight; mouse.ty = (innerHeight / 2 - e.clientY) / innerHeight;
-      if (!mouse.has) { mouse.x = mouse.tx; mouse.y = mouse.ty; mouse.has = true; }
-    });
-
-    /* ---------- tipo de buraco negro ---------- */
-    const bh = { k: 0 }, caps = ['Supermassivo · milhões a bilhões de M☉ · disco alaranjado', 'Massa estelar · ~10 M☉ · disco mais quente e azulado'];
-    const bhBtns = document.querySelectorAll('[data-bh]');
-    bhBtns.forEach(b => b.addEventListener('click', () => {
-      bh.k = +b.dataset.bh; $('#bhsel').dataset.k = bh.k; $('#bhcap').textContent = caps[bh.k];
-      bhBtns.forEach(x => x.setAttribute('aria-pressed', x === b));
-    }));
-
-    /* ---------- modo câmera livre (sandbox) ---------- */
-    const SB0 = { tilt: .36, roll: 0, zoom: .2 }, sb = { on: false, ...SB0 };
-    const sbOpen = $('#sbOpen'), secs = document.querySelectorAll('section'), ptrs = new Map(); let pinch = 0;
-    const sbZoom = d => sb.zoom = clamp(sb.zoom + d, .02, .5), sbTilt = d => sb.tilt = clamp(sb.tilt + d, .08, .9);
-    function setSB(on) {
-      if (on) Object.assign(sb, SB0);
-      sb.on = on; document.body.classList.toggle('sandbox', on);
-      document.documentElement.style.overflow = document.body.style.overflow = on ? 'hidden' : '';
-      secs.forEach(x => x.inert = on); rail.inert = on; sbOpen.setAttribute('aria-expanded', on);
-      (on ? $('#sbExit') : sbOpen).focus({ preventScroll: true });
-    }
-    sbOpen.addEventListener('click', () => setSB(true)); $('#sbExit').addEventListener('click', () => setSB(false));
-    $('#sbReset').addEventListener('click', () => Object.assign(sb, SB0));
-    const pdist = () => { const [a, b] = [...ptrs.values()]; return Math.hypot(a[0] - b[0], a[1] - b[1]); };
-    glc.addEventListener('pointerdown', e => {
-      if (!sb.on) return; glc.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, [e.clientX, e.clientY]);
-      document.body.classList.add('drag'); if (ptrs.size === 2) pinch = pdist();
-    });
-    glc.addEventListener('pointermove', e => {
-      if (!sb.on || !ptrs.has(e.pointerId)) return;
-      const o = ptrs.get(e.pointerId), dx = e.clientX - o[0], dy = e.clientY - o[1]; ptrs.set(e.pointerId, [e.clientX, e.clientY]);
-      if (ptrs.size === 2) { const d = pdist(); if (pinch) sbZoom((d - pinch) * .0012); pinch = d; return; }
-      sb.roll -= dx * .006; sbTilt(dy * .004);
-    });
-    const pUp = e => { ptrs.delete(e.pointerId); pinch = 0; if (!ptrs.size) document.body.classList.remove('drag'); };
-    glc.addEventListener('pointerup', pUp); glc.addEventListener('pointercancel', pUp);
-    glc.addEventListener('wheel', e => { if (!sb.on) return; e.preventDefault(); sbZoom(-e.deltaY * .0004); }, { passive: false });
-    addEventListener('keydown', e => {
-      if (!sb.on) return;
-      const m = { ArrowLeft: () => sb.roll += .08, ArrowRight: () => sb.roll -= .08, ArrowUp: () => sbTilt(-.04), ArrowDown: () => sbTilt(.04), '+': () => sbZoom(.02), '=': () => sbZoom(.02), '-': () => sbZoom(-.02), Escape: () => setSB(false) }[e.key];
-      if (m) { e.preventDefault(); m(); }
-    });
-
-    /* ---------- hover líquido nos botões do CTA ---------- */
-    document.querySelectorAll('.actions .btn').forEach(b => {
-      const at = e => { const r = b.getBoundingClientRect(); b.style.setProperty('--x', (e.clientX - r.left) + 'px'); b.style.setProperty('--y', (e.clientY - r.top) + 'px'); b.style.setProperty('--d', (2 * Math.hypot(r.width, r.height)) + 'px'); };
-      b.addEventListener('pointerenter', at); b.addEventListener('pointerleave', at);
-    });
-
-    addEventListener('resize', resize); resize();
-    if (document.fonts) document.fonts.ready.then(layout);
-    requestAnimationFrame(frame);
-  </script>
-</body>
-
+      addEventListener("resize", resize);
+      resize();
+      if (document.fonts) document.fonts.ready.then(layout);
+      requestAnimationFrame(frame);
+    </script>
+  </body>
 </html>
